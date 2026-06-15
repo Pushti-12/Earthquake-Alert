@@ -1,5 +1,5 @@
 import os
-import mysql.connector""
+import mysql.connector
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 import json
