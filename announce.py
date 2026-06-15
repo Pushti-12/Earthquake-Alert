@@ -1,20 +1,29 @@
+import os
 import mysql.connector
+from dotenv import load_dotenv
 from gtts import gTTS
 import pygame
 import time
+
+load_dotenv()
 
 # Global variables to store the last spoken earthquake data and the time it was last spoken
 last_spoken_earthquake = None
 last_spoken_time = None
 
+
+def get_db_connection():
+    return mysql.connector.connect(
+        host=os.getenv("DB_HOST", "localhost"),
+        user=os.getenv("DB_USER", "root"),
+        password=os.getenv("DB_PASSWORD", ""),
+        database=os.getenv("DB_NAME", "frequency_data")
+    )
+
+
 def fetch_latest_earthquake_data():
     try:
-        conn = mysql.connector.connect(
-            host="192.168.137.1",
-            user="PIT",
-            password="sumeet",
-            database="frequency_data"
-        )
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM earthquake_data ORDER BY origin_time DESC LIMIT 1")
         latest_earthquake = cursor.fetchone()

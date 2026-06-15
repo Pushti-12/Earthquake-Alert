@@ -32,7 +32,7 @@ Earthquake-Alert/
 ├── check_alerts.py       # Main data collection script
 ├── announce.py           # Audio announcement script using the latest event
 ├── raspberrypi.py        # Alternate audio announcement script with nearby parks lookup
-├── audio_message.mp3     # Generated alert audio file
+├── .env.example          # Example environment file
 └── README.md
 ```
 
@@ -55,10 +55,20 @@ cd Earthquake-Alert
 ### 2. Install Dependencies
 
 ```bash
-pip install requests beautifulsoup4 lxml gTTS pygame mysql-connector-python
+pip install -r requirements.txt
 ```
 
-### 3. Setup MySQL Database
+### 3. Create a `.env` File
+
+Copy the example file and update your credentials:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and set `DB_PASSWORD` and `GOOGLE_MAPS_API_KEY` if needed.
+
+### 4. Setup MySQL Database
 
 Open MySQL and run:
 
@@ -68,14 +78,26 @@ CREATE DATABASE frequency_data;
 
 > The `earthquake_data` table is auto-created by `check_alerts.py` if it does not exist.
 
-### 4. Update Database Credentials
+### 5. Update Database Credentials
 
-The default credentials are hardcoded in the scripts. Update them as needed in:
+Database connection settings are now loaded from `.env`.
 
-- `check_alerts.py` (uses `host="localhost"`)
-- `announce.py` and `raspberrypi.py` (use `host="192.168.137.1"` by default)
+Example `.env` values:
 
-Example connection block:
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=frequency_data
+```
+
+For `raspberrypi.py`, optionally add your Google Maps API key:
+
+```env
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+```
+
+Example connection block inside the scripts is now handled by `get_db_connection()`.
 
 ```python
 conn = mysql.connector.connect(
@@ -86,13 +108,13 @@ conn = mysql.connector.connect(
 )
 ```
 
-### 5. Run the Data Collector
+### 6. Run the Data Collector
 
 ```bash
 python check_alerts.py
 ```
 
-### 6. Run Audio Alerts (Optional)
+### 7. Run Audio Alerts (Optional)
 
 Run `announce.py` or `raspberrypi.py` separately to generate spoken alerts from the latest stored event:
 
@@ -141,7 +163,7 @@ SELECT * FROM earthquake_data WHERE magnitude >= 4.0;
 - `check_alerts.py` polls the API every 6 seconds.
 - `announce.py` and `raspberrypi.py` are separate audio scripts and are not automatically invoked by `check_alerts.py`.
 - `raspberrypi.py` uses Google Maps API lookup and may require a valid API key.
-- `audio_message.mp3` may be generated at runtime by the speaker scripts.
+- `audio_message.mp3` and `last_event_id.txt` are generated at runtime by the speaker scripts.
 
 ---
 

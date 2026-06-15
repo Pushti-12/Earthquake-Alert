@@ -1,21 +1,29 @@
+import os
 import mysql.connector
 import requests
+from dotenv import load_dotenv
 from gtts import gTTS
 import pygame
 import time
+
+load_dotenv()
 
 # Global variables to store the last spoken earthquake data and the time it was last spoken
 last_spoken_earthquake = None
 last_spoken_time = None
 
+def get_db_connection():
+    return mysql.connector.connect(
+        host=os.getenv("DB_HOST", "localhost"),
+        user=os.getenv("DB_USER", "root"),
+        password=os.getenv("DB_PASSWORD", ""),
+        database=os.getenv("DB_NAME", "frequency_data")
+    )
+
+
 def fetch_latest_earthquake_data():
     try:
-        conn = mysql.connector.connect(
-            host="192.168.137.1",
-            user="PIT",
-            password="sumeet",
-            database="frequency_data"
-        )
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM earthquake_data ORDER BY origin_time DESC LIMIT 1")
         latest_earthquake = cursor.fetchone()
@@ -64,8 +72,12 @@ def generate_audio(message):
         pygame.time.Clock().tick(10)
 
 def find_parks_near_location(latitude, longitude, radius=20000):
+    api_key = os.getenv("GOOGLE_MAPS_API_KEY", "")
+    if not api_key:
+        print("Google Maps API key is not configured. Skipping nearby park lookup.")
+        return []
+
     try:
-        api_key = "YOUR_GOOGLE_MAPS_API_KEY"
         url = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={latitude},{longitude}&radius={radius}&type=park&key={api_key}"
         response = requests.get(url)
         response.raise_for_status()  # Raise an exception for 4XX and 5XX status codes
@@ -83,10 +95,6 @@ def find_parks_near_location(latitude, longitude, radius=20000):
 def main():
     global last_spoken_earthquake
     global last_spoken_time
-
-    # Clear last spoken earthquake data and time
-    last_spoken_earthquake = None
-    last_spoken_time = None
 
     if last_spoken_time is None:
         last_spoken_time = time.time()  # Initialize last_spoken_time

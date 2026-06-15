@@ -1,9 +1,21 @@
+import os
 import mysql.connector
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 import json
 import requests
 import time
+from dotenv import load_dotenv
+
+load_dotenv()
+
+def get_db_connection():
+    return mysql.connector.connect(
+        host=os.getenv("DB_HOST", "localhost"),
+        user=os.getenv("DB_USER", "root"),
+        password=os.getenv("DB_PASSWORD", ""),
+        database=os.getenv("DB_NAME", "frequency_data")
+    )
 
 def table_exists(cursor):
     cursor.execute("SHOW TABLES LIKE 'earthquake_data'")
@@ -25,12 +37,7 @@ def create_earthquake_table(cursor):
 
 def insert_earthquake_data(event_id, place_name, origin_time, latitude, longitude, magnitude):
     try:
-        conn = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="sumeet",
-            database="frequency_data"
-        )
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM earthquake_data WHERE event_id = %s", (event_id,))
         existing_event = cursor.fetchone()
@@ -80,12 +87,7 @@ while True:
             print("Latitude:", latitude)
             print("Longitude:", longitude)
             print("Magnitude:", magnitude)
-            conn = mysql.connector.connect(
-                host="localhost",
-                user="root",
-                password="sumeet",
-                database="frequency_data"
-            )
+            conn = get_db_connection()
             cursor = conn.cursor()
             if not table_exists(cursor):
                 create_earthquake_table(cursor)

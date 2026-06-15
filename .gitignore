@@ -1,0 +1,14 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Environment files
+.env
+
+# Audio and runtime files
+audio_message.mp3
+last_event_id.txt
+
+# IDE files
+.vscode/
